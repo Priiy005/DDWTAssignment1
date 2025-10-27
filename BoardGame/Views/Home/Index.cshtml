@@ -1,5 +1,20 @@
-﻿@{
+﻿@using WebMatrix.Data
+
+@{
     ViewBag.Title = "Home Page";
+}
+
+@{
+    var db = Database.Open("BoardGame");
+
+    var sql = "Select * FROM BoardGame WHERE Name like CONCAT(@0, '%') or Description like CONCAT(@0, '%')";
+
+    var data = db.Query(sql, Request.Form["searchBar"]);
+
+    string min_time;
+    string min_time_value;
+    string max_time;
+    string max_time_value;
 }
 
 <form>
@@ -11,3 +26,62 @@
         <button class="btn btn-primary">Search</button>
     </div>
 </form>
+
+@if (data.Count() > 0)
+{
+    <div class="row justify-content-center">
+        @foreach (var boardgame in data)
+        {
+            <div class="card" style="width: 18rem;">
+                <img src="@boardgame.ImagePath" class="card-img-top" alt="Image of @boardgame.Name " />
+                <div class="card-body">
+                    <h5 class="card-title">@boardgame.Name</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">@boardgame.MinPlayers to @boardgame.MaxPlayers Players</h6>
+                    @if (boardgame.ComMinPlayTime > 59)
+                    {
+                        min_time = (boardgame.ComMinPlayTime / 60).ToString();
+                        min_time_value = " Hours";
+                    }
+                    else
+                    {
+                        min_time = boardgame.ComMinPlayTime.ToString();
+                        min_time_value = " Minutes";
+                    }
+
+                    @if (boardgame.ComMaxPlayTime > 59)
+                    {
+                        max_time = (boardgame.ComMaxPlayTime / 60).ToString();
+                        max_time_value = " Hours";
+                    }
+                    else
+                    {
+                        max_time = boardgame.ComMaxPlayTime.ToString();
+                        max_time_value = " Minutes";
+                    }
+                    @if (max_time == min_time && max_time_value == min_time_value)
+                    {
+                        <h6 class="card-subtitle mb-2 text-muted"> @(min_time + min_time_value) Playtime</h6>
+                    }
+                    else
+                    {
+                        <h6 class="card-subtitle mb-2 text-muted"> @(min_time + min_time_value) to @(max_time + max_time_value) Playtime</h6>
+                    }
+                    @if (boardgame.ComAgeRec != null)
+                    {
+                        <h6 class="card-subtitle mb-2 text-muted">Recommended @Math.Round(new decimal(boardgame.ComAgeRec)) years or over</h6>
+                    }
+                    <row>
+                        <h6 class="card-subtitle mb-2 text-muted">Owned: @boardgame.NumOwned</h6>
+                        <h6 class="card-subtitle mb-2 text-muted">Want: @boardgame.NumWant</h6>
+                        <h6 class="card-subtitle mb-2 text-muted">Wish: @boardgame.NumWish</h6>
+                    </row>
+                    <a href="/Home/Details?id=@boardgame.BGGID" class="btn btn-primary">Details</a>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <h2 class="text-center text-warning bg-light">No </h2>
+}
