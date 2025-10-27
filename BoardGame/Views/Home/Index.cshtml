@@ -7,9 +7,11 @@
 @{
     var db = Database.Open("BoardGame");
 
-    var sql = "Select * FROM BoardGame WHERE Name like CONCAT(@0, '%') or Description like CONCAT(@0, '%')";
+    var sql = "Select * FROM BoardGame as BG WHERE BG.Name like CONCAT(@0, '%') or BG.Description like CONCAT(@0, '%')";
+    var join_sql = "Select GC.BGGId, C.Category FROM GameCategory as GC join Category as C on GC.Category = C.CategoryID";
 
     var data = db.Query(sql, Request.Form["searchBar"]);
+    var join_data = db.Query(join_sql, Request.Form["searchBar"]);
 
     string min_time;
     string min_time_value;
@@ -33,9 +35,16 @@
         @foreach (var boardgame in data)
         {
             <div class="card" style="width: 18rem;">
-                <img src="@boardgame.ImagePath" class="card-img-top" alt="Image of @boardgame.Name " />
+                <img src="@boardgame.ImagePath" class="card-img-top" alt="Image of @boardgame.Name" />
                 <div class="card-body">
                     <h5 class="card-title">@boardgame.Name</h5>
+                    @foreach (var category in join_data)
+                    {
+                        if (category.BGGId == boardgame.BGGId)
+                        {
+                            <h6 class="card-subtitle mb-2 text-muted">@category.category</h6>
+                        }
+                    }
                     <h6 class="card-subtitle mb-2 text-muted">@boardgame.MinPlayers to @boardgame.MaxPlayers Players</h6>
                     @if (boardgame.ComMinPlayTime > 59)
                     {
