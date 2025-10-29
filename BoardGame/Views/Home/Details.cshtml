@@ -1,7 +1,94 @@
-﻿
+﻿@using WebMatrix.Data
+
 @{
+    var db = Database.Open("BoardGame");
+
     ViewBag.Title = "Detail";
+
+    var id = Request.QueryString["id"];
+
+    var sql = $"Select * FROM BoardGame as BG where BGGId = @0";
+    var join_sql = "Select GC.BGGId, C.Category, C.CategoryID FROM GameCategory as GC join Category as C on GC.Category = C.CategoryID";
+
+    var data = db.QuerySingle(sql, id);
+    var join_data = db.Query(join_sql, "");
+
+    string min_time;
+    string min_time_value;
+    string max_time;
+    string max_time_value;
 }
 
 <h2>Detail</h2>
+
+@if (data != null)
+{
+    <div>
+        <h2 class="text-center bg-light">Product Details</h2>
+        <div class=" row justify-content-center">
+            <div class="card form-control" style="width: 18rem;">
+                <div class="card" style="width: 18rem;">
+                    <img src="@data.ImagePath" class="card-img-top" alt="Image of @data.Name" />
+                    <div class="card-body">
+                        <h5 class="card-title">@data.Name</h5>
+                        @if (data.YearPublished != null)
+                        {
+                            <h6 class="card-subtitle mb-2 text-muted">@data.YearPublished.ToString("MM/dd/yyyy") </h6>
+                        }
+                        @foreach (var game_category in join_data)
+                        {
+                            if (game_category.BGGId == data.BGGId)
+                            {
+                                <h6 class="card-subtitle mb-2 text-muted">@game_category.category</h6>
+                            }
+                        }
+                        <h6 class="card-subtitle mb-2 text-muted">@data.MinPlayers to @data.MaxPlayers Players</h6>
+                        @if (data.ComMinPlayTime > 59)
+                        {
+                            min_time = (data.ComMinPlayTime / 60).ToString();
+                            min_time_value = " Hours";
+                        }
+                        else
+                        {
+                            min_time = data.ComMinPlayTime.ToString();
+                            min_time_value = " Minutes";
+                        }
+
+                        @if (data.ComMaxPlayTime > 59)
+                        {
+                            max_time = (data.ComMaxPlayTime / 60).ToString();
+                            max_time_value = " Hours";
+                        }
+                        else
+                        {
+                            max_time = data.ComMaxPlayTime.ToString();
+                            max_time_value = " Minutes";
+                        }
+                        @if (max_time == min_time && max_time_value == min_time_value)
+                        {
+                            <h6 class="card-subtitle mb-2 text-muted"> @(min_time + min_time_value) Playtime</h6>
+                        }
+                        else
+                        {
+                            <h6 class="card-subtitle mb-2 text-muted"> @(min_time + min_time_value) to @(max_time + max_time_value) Playtime</h6>
+                        }
+                        @if (data.ComAgeRec != null)
+                        {
+                            <h6 class="card-subtitle mb-2 text-muted">Recommended @Math.Round(new decimal(data.ComAgeRec)) years or over</h6>
+                        }
+                        <div class="row">
+                            <h6 class="card-subtitle mb-2 text-muted">Owned: @data.NumOwned</h6>
+                            <h6 class="card-subtitle mb-2 text-muted">Want: @data.NumWant</h6>
+                            <h6 class="card-subtitle mb-2 text-muted">Wish: @data.NumWish</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+</div>
+}
+else
+{
+    <h2 class="text-center text-warning bg-light">Oops no matching products returned</h2>
+};
 
