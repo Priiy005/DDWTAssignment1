@@ -7,10 +7,12 @@
 
     var id = Request.QueryString["id"];
 
-    var sql = $"Select * FROM BoardGame as BG where BGGId = @0";
+    var sql = "Select * FROM BoardGame as BG left join (Select BGGid, COUNT(UserRating.rating) as reviewCount, AVG(UserRating.rating) as avgRating from UserRating group by BGGid) as ad on ad.BGGID = BG.BGGid where BG.BGGId = @0";
+    var reviews_sql = "Select * FROM UserRating where BGGId = @0";
     var join_sql = "Select GC.BGGId, C.Category, C.CategoryID FROM GameCategory as GC join Category as C on GC.Category = C.CategoryID";
 
     var data = db.QuerySingle(sql, id);
+    var review_data = db.Query(reviews_sql, id);
     var join_data = db.Query(join_sql, "");
 
     string min_time;
@@ -26,8 +28,7 @@
     <div>
         <h2 class="text-center bg-light">Product Details</h2>
         <div class=" row justify-content-center">
-            <div class="card form-control" style="width: 18rem;">
-                <div class="card" style="width: 18rem;">
+                <div class="card form-control" style="">
                     <img src="@data.ImagePath" class="card-img-top" alt="Image of @data.Name" />
                     <div class="card-body">
                         <h5 class="card-title">@data.Name</h5>
@@ -42,6 +43,7 @@
                                 <h6 class="card-subtitle mb-2 text-muted">@game_category.category</h6>
                             }
                         }
+
                         <h6 class="card-subtitle mb-2 text-muted">@data.MinPlayers to @data.MaxPlayers Players</h6>
                         @if (data.ComMinPlayTime > 59)
                         {
@@ -81,8 +83,27 @@
                             <h6 class="card-subtitle mb-2 text-muted">Want: @data.NumWant</h6>
                             <h6 class="card-subtitle mb-2 text-muted">Wish: @data.NumWish</h6>
                         </div>
+
+                        @if (@data.reviewCount > 0)
+                        {
+                            if (@data.reviewCount > 1)
+                            {
+                                <p class="card-subtitle"> @data.reviewCount Reviews @Math.Round(data.avgRating) Avg</p>
+                            }
+                            else
+                            {
+                                <p class="card-subtitle"> @data.reviewCount Review @Math.Round(data.avgRating) Avg</p>
+                            }
+
+                            <h5 class="card-title">Reviews</h5>
+                            foreach (var review in review_data)
+                            {
+                                <h6 class="card-subtitle mb-2 text-muted"> User: @review.Username Date: @review.ReviewDate.ToString("MM/dd/yyyy") Rating: @review.Rating</h6>
+
+                            }
+                        }
+
                     </div>
-                </div>
             </div>
     </div>
 </div>
@@ -90,5 +111,5 @@
 else
 {
     <h2 class="text-center text-warning bg-light">Oops no matching products returned</h2>
-};
+}
 

@@ -32,7 +32,7 @@
             <button class="btn btn-primary" " name="displayType" value="card">Card</button>
             <button class="btn btn-primary" name="displayType" value="table">Table</button>
         </div>
-        <select name="categoryID" class="dropdown">
+        <select name="categoryID" value ="" class="dropdown col-3">
             <option value="">Select Category</option>
             @foreach (var category in category_search)
             {
@@ -49,10 +49,10 @@
             <div class="row justify-content-center">
                 @foreach (var boardgame in data)
                 {
-                    var correctcat = false;
+                    var correctcat = false; 
                     foreach (var category in join_data)
                     {
-                        if ((category.BGGId == boardgame.BGGId && category.categoryID == Request.Form["categoryID"]) || Request.Form["categoryID"] == "")
+                        if ((category.BGGId == boardgame.BGGId && category.categoryID == Request.Form["categoryID"]) || Request.Form["categoryID"] == null || Request.Form["categoryID"] == "")
                         {
                             correctcat = true;
                         }
