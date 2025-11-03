@@ -7,18 +7,19 @@
 @{
     var db = Database.Open("BoardGame");
 
-    var sql = "Select * FROM BoardGame as BG WHERE BG.Name like CONCAT(@0, '%') or BG.Description like CONCAT(@0, '%')";
-    var join_sql = "Select GC.BGGId, C.Category, C.CategoryID FROM GameCategory as GC join Category as C on GC.Category = C.CategoryID";
+    var concat = "with Gcats as (select GC.BGGid, STRING_AGG(C.Category, ', ') as categories, STRING_AGG(C.CategoryID, ', ') as catIDs from Category as C join GameCategory as GC on GC.Category = C.CategoryID group by GC.BGGid HAVING STRING_AGG(C.CategoryID, ', ') like CONCAT('C1', '%') )";
+    var sql = concat + "Select * FROM BoardGame as BG join Gcats on Gcats.BGGid = BG.BGGId WHERE BG.Name like CONCAT(@0, '%') or BG.Description like CONCAT(@0, '%')";
     var categories_sql = "Select Category, CategoryID FROM Category";
 
-    var data = db.Query(sql, Request.Form["searchBar"]);
+    var data = db.Query(sql, Request.Form["searchBar"], Request.Form["categoryID"]);
     var category_search = db.Query(categories_sql, "");
-    var join_data = db.Query(join_sql, "");
 
     string min_time;
     string min_time_value;
     string max_time;
     string max_time_value;
+
+    string displaytype = "card";
 }
 
 <form action="/Home/Index" method="post">
@@ -28,8 +29,8 @@
             <input type="text" name="searchBar" placeholder="Board Game Name" class="form-control" />
         </div>
         <div class="col-3">
-            <button class="btn btn-primary">Search</button>
-            <button class="btn btn-primary" " name="displayType" value="card">Card</button>
+            <button class="btn btn-primary" name="displayType" value="@Request.Form["displayType"]" >Search</button>
+            <button class="btn btn-primary" name="displayType" value="card">Card</button>
             <button class="btn btn-primary" name="displayType" value="table">Table</button>
         </div>
         <select name="categoryID" value ="" class="dropdown col-3">
@@ -44,21 +45,12 @@
 
     @if (data.Count() > 0)
     {
-        if (Request.Form["displayType"] == "card" || Request.Form["displayType"] == null)
+        displaytype = Request.Form["displayType"];
+        if ( displaytype == "card" || displaytype == null)
         {
             <div class="row justify-content-center">
                 @foreach (var boardgame in data)
                 {
-                    var correctcat = false; 
-                    foreach (var category in join_data)
-                    {
-                        if ((category.BGGId == boardgame.BGGId && category.categoryID == Request.Form["categoryID"]) || Request.Form["categoryID"] == null || Request.Form["categoryID"] == "")
-                        {
-                            correctcat = true;
-                        }
-                    }
-                    if (correctcat)
-                    {
                         <div class="card" style="width: 18rem;">
                             <img src="@boardgame.ImagePath" class="card-img-top" alt="Image of @boardgame.Name" />
                             <div class="card-body">
@@ -67,13 +59,8 @@
                                 {
                                     <h6 class="card-subtitle mb-2 text-muted">@boardgame.YearPublished.ToString("MM/dd/yyyy") </h6>
                                 }
-                                @foreach (var game_category in join_data)
-                                {
-                                    if (game_category.BGGId == boardgame.BGGId)
-                                    {
-                                        <h6 class="card-subtitle mb-2 text-muted">@game_category.category</h6>
-                                    }
-                                }
+                                 <h6 class="card-subtitle mb-2 text-muted">@boardgame.categories</h6>
+
                                 <h6 class="card-subtitle mb-2 text-muted">@boardgame.MinPlayers to @boardgame.MaxPlayers Players</h6>
                                 @if (boardgame.ComMinPlayTime > 59)
                                 {
@@ -108,6 +95,7 @@
                                 {
                                     <h6 class="card-subtitle mb-2 text-muted">Recommended @Math.Round(new decimal(boardgame.ComAgeRec)) years or over</h6>
                                 }
+                                <h6 class="card-subtitle mb-2 text-muted">@boardgame.Description</h6>
                                 <div class="row">
                                     <h6 class="card-subtitle mb-2 text-muted">Owned: @boardgame.NumOwned</h6>
                                     <h6 class="card-subtitle mb-2 text-muted">Want: @boardgame.NumWant</h6>
@@ -122,7 +110,7 @@
             </div>
 
           }
-            if (Request.Form["displayType"] == "table")
+            if (displaytype == "table")
             {
                 <div class="row justify-content-center">
 
@@ -130,9 +118,12 @@
                         <thead>
                             <tr>
                                 <th scope="col" class="col-2">Name</th>
+                                <th scope="col" class="col-2">Description</th>
                                 <th scope="col" class="col-2">Year</th>
                                 <th scope="col" class="col-2">MinPlayers</th>
                                 <th scope="col" class="col-2">MaxPlayers</th>
+                                <th scope="col" class="col-2">Categories</th>
+                                <th scope="col" class="col-2">Details</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -140,6 +131,7 @@
                             {
                                 <tr>
                                     <td scope="row">@boardgame.Name</td>
+                                    <td scope="row">@boardgame.Description</td>
                                     <td>
                                         @if (boardgame.YearPublished != null)
                                         {
@@ -148,6 +140,8 @@
                                     </td>
                                     <td>@boardgame.MinPLayers</td>
                                     <td>@boardgame.MaxPLayers</td>
+                                    <td>@boardgame.categories</td>
+                                    <td><a href="/Home/Details?id=@boardgame.BGGID" class="btn btn-primary">Details</a></td>
                                 </tr>
                             }
                         </tbody>
