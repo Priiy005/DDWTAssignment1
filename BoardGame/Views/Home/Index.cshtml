@@ -7,7 +7,7 @@
 @{
     var db = Database.Open("BoardGame");
 
-    var concat = "with Gcats as (select GC.BGGid, STRING_AGG(C.Category, ', ') as categories, STRING_AGG(C.CategoryID, ', ') as catIDs from Category as C join GameCategory as GC on GC.Category = C.CategoryID group by GC.BGGid HAVING STRING_AGG(C.CategoryID, ', ') like CONCAT('C1', '%') )";
+    var concat = "with Gcats as (select GC.BGGid, STRING_AGG(C.Category, ', ') as categories, STRING_AGG(C.CategoryID, ', ') as catIDs from Category as C join GameCategory as GC on GC.Category = C.CategoryID group by GC.BGGid HAVING STRING_AGG(C.CategoryID, ', ') like CONCAT('%', CONCAT(@1, '%')) )";
     var sql = concat + "Select * FROM BoardGame as BG join Gcats on Gcats.BGGid = BG.BGGId WHERE BG.Name like CONCAT(@0, '%') or BG.Description like CONCAT(@0, '%')";
     var categories_sql = "Select Category, CategoryID FROM Category";
 
