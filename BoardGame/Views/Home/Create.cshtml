@@ -1,7 +1,48 @@
-﻿
+﻿﻿@using WebMatrix.Data
+
 @{
     ViewBag.Title = "Create";
+    var db = Database.Open("BoardGame");
+    var sql_families = $"select GF.FamilyCode, concat(GF.FamilyCode, ' - ', GF.Family) as FamilyName from GameFamily as GF";
+    var fam_data = db.Query(sql_families, "");
+
+
 }
 
 <h2>Create</h2>
 
+<form class="row" method="post" action="/Home/Create">
+    <p>Item # [auto]</p>
+    <div class="mb-2">
+        <div>
+            <p>Name</p>
+            <input type="text" name="Name" placeholder="Boardgame Name" class="form-control" />
+        </div>
+
+        <p>Description</p>
+        <textarea name="description" placeholder="description" class="form-control"></textarea>
+
+        <div>
+            <p>Category</p>
+            <select name="familyID" class="dropdown">
+                <option value="">Select Category</option>
+                @foreach (var family in fam_data)
+                {
+                    <option value="@family.FamilyCode">@family.FamilyName</option>
+                }
+            </select>
+        </div>
+
+        <p>Year Published</p>
+        <input type="date" name="year" placeholder="Date" class="form-control" />
+
+        <p>Image URL</p>
+        <input name="imageurl" placeholder="imageurl" class="form-control" />
+
+        <div class="justify-content-right">
+            <button class="btn btn-primary">Save</button>
+            <button class="btn btn-primary">Clear</button>
+        </div>
+
+    </div>
+</form>

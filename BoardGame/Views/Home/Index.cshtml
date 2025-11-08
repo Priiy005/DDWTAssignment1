@@ -7,7 +7,7 @@
 @{
     var db = Database.Open("BoardGame");
 
-    var concat = "with Gcats as (select GC.BGGid, STRING_AGG(C.Category, ', ') as categories, STRING_AGG(C.CategoryID, ', ') as catIDs from Category as C join GameCategory as GC on GC.Category = C.CategoryID group by GC.BGGid HAVING STRING_AGG(C.CategoryID, ', ') like CONCAT('C1', '%') )";
+    var concat = "with Gcats as (select GC.BGGid, STRING_AGG(C.Category, ', ') as categories, STRING_AGG(C.CategoryID, ', ') as catIDs from Category as C join GameCategory as GC on GC.Category = C.CategoryID group by GC.BGGid HAVING STRING_AGG(C.CategoryID, ', ') like CONCAT('%', CONCAT(@1, '%')) )";
     var sql = concat + "Select * FROM BoardGame as BG join Gcats on Gcats.BGGid = BG.BGGId WHERE BG.Name like CONCAT(@0, '%') or BG.Description like CONCAT(@0, '%')";
     var categories_sql = "Select Category, CategoryID FROM Category";
 
@@ -29,11 +29,11 @@
             <input type="text" name="searchBar" placeholder="Board Game Name" class="form-control" />
         </div>
         <div class="col-3">
-            <button class="btn btn-primary" name="displayType" value="@Request.Form["displayType"]" >Search</button>
+            <button class="btn btn-primary" name="displayType" value="@Request.Form["displayType"]">Search</button>
             <button class="btn btn-primary" name="displayType" value="card">Card</button>
             <button class="btn btn-primary" name="displayType" value="table">Table</button>
         </div>
-        <select name="categoryID" value ="" class="dropdown col-3">
+        <select name="categoryID" value="" class="dropdown col-3">
             <option value="">Select Category</option>
             @foreach (var category in category_search)
             {
@@ -46,113 +46,149 @@
     @if (data.Count() > 0)
     {
         displaytype = Request.Form["displayType"];
-        if ( displaytype == "card" || displaytype == null)
+        if (displaytype == "card" || displaytype == null)
         {
             <div class="row justify-content-center">
                 @foreach (var boardgame in data)
                 {
-                        <div class="card" style="width: 18rem;">
-                            <img src="@boardgame.ImagePath" class="card-img-top" alt="Image of @boardgame.Name" />
-                            <div class="card-body">
-                                <h5 class="card-title">@boardgame.Name</h5>
-                                @if (boardgame.YearPublished != null)
-                                {
-                                    <h6 class="card-subtitle mb-2 text-muted">@boardgame.YearPublished.ToString("MM/dd/yyyy") </h6>
-                                }
-                                 <h6 class="card-subtitle mb-2 text-muted">@boardgame.categories</h6>
+                    <div class="card" style="width: 18rem;">
+                        <img src="@boardgame.ImagePath" class="card-img-top" alt="Image of @boardgame.Name" />
+                        <div class="card-body">
+                            <h5 class="card-title">@boardgame.Name</h5>
+                            @if (boardgame.YearPublished != null)
+                            {
+                                <h6 class="card-subtitle mb-2 text-muted">@boardgame.YearPublished.ToString("MM/dd/yyyy") </h6>
+                            }
+                            <h6 class="card-subtitle mb-2 text-muted">@boardgame.categories</h6>
 
-                                <h6 class="card-subtitle mb-2 text-muted">@boardgame.MinPlayers to @boardgame.MaxPlayers Players</h6>
-                                @if (boardgame.ComMinPlayTime > 59)
-                                {
-                                    min_time = (boardgame.ComMinPlayTime / 60).ToString();
-                                    min_time_value = " Hours";
-                                }
-                                else
-                                {
-                                    min_time = boardgame.ComMinPlayTime.ToString();
-                                    min_time_value = " Minutes";
-                                }
+                            <h6 class="card-subtitle mb-2 text-muted">@boardgame.MinPlayers to @boardgame.MaxPlayers Players</h6>
+                            @if (boardgame.ComMinPlayTime > 59)
+                            {
+                                min_time = (boardgame.ComMinPlayTime / 60).ToString();
+                                min_time_value = " Hours";
+                            }
+                            else
+                            {
+                                min_time = boardgame.ComMinPlayTime.ToString();
+                                min_time_value = " Minutes";
+                            }
 
-                                @if (boardgame.ComMaxPlayTime > 59)
-                                {
-                                    max_time = (boardgame.ComMaxPlayTime / 60).ToString();
-                                    max_time_value = " Hours";
-                                }
-                                else
-                                {
-                                    max_time = boardgame.ComMaxPlayTime.ToString();
-                                    max_time_value = " Minutes";
-                                }
-                                @if (max_time == min_time && max_time_value == min_time_value)
-                                {
-                                    <h6 class="card-subtitle mb-2 text-muted"> @(min_time + min_time_value) Playtime</h6>
-                                }
-                                else
-                                {
-                                    <h6 class="card-subtitle mb-2 text-muted"> @(min_time + min_time_value) to @(max_time + max_time_value) Playtime</h6>
-                                }
-                                @if (boardgame.ComAgeRec != null)
-                                {
-                                    <h6 class="card-subtitle mb-2 text-muted">Recommended @Math.Round(new decimal(boardgame.ComAgeRec)) years or over</h6>
-                                }
-                                <h6 class="card-subtitle mb-2 text-muted">@boardgame.Description</h6>
-                                <div class="row">
-                                    <h6 class="card-subtitle mb-2 text-muted">Owned: @boardgame.NumOwned</h6>
-                                    <h6 class="card-subtitle mb-2 text-muted">Want: @boardgame.NumWant</h6>
-                                    <h6 class="card-subtitle mb-2 text-muted">Wish: @boardgame.NumWish</h6>
-                                </div>
-                                <a href="/Home/Details?id=@boardgame.BGGID" class="btn btn-primary">Details</a>
+                            @if (boardgame.ComMaxPlayTime > 59)
+                            {
+                                max_time = (boardgame.ComMaxPlayTime / 60).ToString();
+                                max_time_value = " Hours";
+                            }
+                            else
+                            {
+                                max_time = boardgame.ComMaxPlayTime.ToString();
+                                max_time_value = " Minutes";
+                            }
+                            @if (max_time == min_time && max_time_value == min_time_value)
+                            {
+                                <h6 class="card-subtitle mb-2 text-muted"> @(min_time + min_time_value) Playtime</h6>
+                            }
+                            else
+                            {
+                                <h6 class="card-subtitle mb-2 text-muted"> @(min_time + min_time_value) to @(max_time + max_time_value) Playtime</h6>
+                            }
+                            @if (boardgame.ComAgeRec != null)
+                            {
+                                <h6 class="card-subtitle mb-2 text-muted">Recommended @Math.Round(new decimal(boardgame.ComAgeRec)) years or over</h6>
+                            }
+                            <h6 class="card-subtitle mb-2 text-muted">@boardgame.Description</h6>
+                            <div class="row">
+                                <h6 class="card-subtitle mb-2 text-muted">Owned: @boardgame.NumOwned</h6>
+                                <h6 class="card-subtitle mb-2 text-muted">Want: @boardgame.NumWant</h6>
+                                <h6 class="card-subtitle mb-2 text-muted">Wish: @boardgame.NumWish</h6>
                             </div>
+                            <a href="/Home/Details?id=@boardgame.BGGID" class="btn btn-primary">Details</a>
                         </div>
+                    </div>
 
-                    }
+                }
                 }
             </div>
 
-          }
-            if (displaytype == "table")
-            {
-                <div class="row justify-content-center">
-
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col" class="col-2">Name</th>
-                                <th scope="col" class="col-2">Description</th>
-                                <th scope="col" class="col-2">Year</th>
-                                <th scope="col" class="col-2">MinPlayers</th>
-                                <th scope="col" class="col-2">MaxPlayers</th>
-                                <th scope="col" class="col-2">Categories</th>
-                                <th scope="col" class="col-2">Details</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var boardgame in data)
-                            {
-                                <tr>
-                                    <td scope="row">@boardgame.Name</td>
-                                    <td scope="row">@boardgame.Description</td>
-                                    <td>
-                                        @if (boardgame.YearPublished != null)
-                                        {
-                                            <h6 class="card-subtitle mb-2 text-muted">@boardgame.YearPublished.ToString("MM/dd/yyyy") </h6>
-                                        }
-                                    </td>
-                                    <td>@boardgame.MinPLayers</td>
-                                    <td>@boardgame.MaxPLayers</td>
-                                    <td>@boardgame.categories</td>
-                                    <td><a href="/Home/Details?id=@boardgame.BGGID" class="btn btn-primary">Details</a></td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
-
         }
-        else
+        if (displaytype == "table")
         {
-            <h2 class="text-center text-warning bg-light">Oops no matching products returned</h2>
+            <div class="row justify-content-center">
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="col-2">Name</th>
+                            <th scope="col" class="col-2">Description</th>
+                            <th scope="col" class="col-2">Year</th>
+                            <th scope="col" class="col-2">MinPlayers</th>
+                            <th scope="col" class="col-2">MaxPlayers</th>
+                            <th scope="col" class="col-2">Categories</th>
+                            <th scope="col" class="col-2">Details</th>
+                            <th scope="col" class="col-2">Gameweight</th>
+                            <th scope="col" class="col-2">ComAge</th>
+                            <th scope="col" class="col-2">Year</th>
+                            <th scope="col" class="col-2">MinPlayers</th>
+                            <th scope="col" class="col-2">MaxPlayers</th>
+                            <th scope="col" class="col-2">Categories</th>
+                            <th scope="col" class="col-2">Details</th>
+                            <th scope="col" class="col-2">Name</th>
+                            <th scope="col" class="col-2">Description</th>
+                            <th scope="col" class="col-2">Year</th>
+                            <th scope="col" class="col-2">MinPlayers</th>
+                            <th scope="col" class="col-2">MaxPlayers</th>
+                            <th scope="col" class="col-2">Categories</th>
+                            <th scope="col" class="col-2">Details</th>
+                            <th scope="col" class="col-2">MinPlayers</th>
+                            <th scope="col" class="col-2">MaxPlayers</th>
+                            <th scope="col" class="col-2">Categories</th>
+                            <th scope="col" class="col-2">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var boardgame in data)
+                        {
+                            <tr>
+                                <td scope="row">@boardgame.Name</td>
+                                <td scope="row">@boardgame.Description</td>
+                                <td>
+                                    @if (boardgame.YearPublished != null)
+                                    {
+                                        <h6 class="card-subtitle mb-2 text-muted">@boardgame.YearPublished.ToString("MM/dd/yyyy") </h6>
+                                    }
+                                </td>
+                                <td>@boardgame.MinPLayers</td>
+                                <td>@boardgame.MaxPLayers</td>
+                                <td>@boardgame.categories</td>
+                                <td>@boardgame.ComAgeRec</td>
+                                <td>@boardgame.LanguageEase</td>
+                                <td>@boardgame.BestPlayers</td>
+                                <td>@boardgame.NumOwned</td>
+                                <td>@boardgame.NumWant</td>
+                                <td>@boardgame.NumWish</td>
+                                <td>@boardgame.MfgPLaytime</td>
+                                <td>@boardgame.ComMinPLaytime</td>
+                                <td>@boardgame.ComMaxPlaytime</td>
+                                <td>@boardgame.MfgAgeRec</td>
+                                <td>@boardgame.NumAlternates</td>
+                                <td>@boardgame.NumExpansions</td>
+                                <td>@boardgame.NumImplementations</td>
+                                <td>@boardgame.Family</td>
+                                <td>@boardgame.RankInboardgame</td>
+                                <td>@boardgame.RankInstrategygames</td>
+                                <td>@boardgame.RankInfamilygames</td>
+                                <td>@boardgame.RankInthematic</td>
+                                <td><a href="/Home/Details?id=@boardgame.BGGID" class="btn btn-primary">Details</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
 
-    </form>
+    }
+    else
+    {
+        <h2 class="text-center text-warning bg-light">Oops no matching products returned</h2>
+    }
+
+</form>
