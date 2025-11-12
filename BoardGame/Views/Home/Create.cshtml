@@ -6,7 +6,19 @@
     var sql_families = $"select GF.FamilyCode, concat(GF.FamilyCode, ' - ', GF.Family) as FamilyName from GameFamily as GF";
     var fam_data = db.Query(sql_families, "");
 
-
+    if (IsPost)
+    {
+        var name = Request.Form["Name"];
+        var family = Request.Form["familyID"];
+        var year = Request.Form["year"];
+        var description = Request.Form["description"];
+        var image = Request.Form["imageurl"];
+        var sql_insert = "Insert into Boardgame (BGGid, Name, Description, YearPublished, ImagePath, Family, GameWeight, MinPlayers, MaxPlayers, ComAgeRec, LanguageEase, BestPLayers, NumOwned, NumWant, NumWish, MfgPlayTime, ComMinPlaytime, ComMaxPlaytime, MfgAgeRec, NumAlternates, NumExpansions, NumImplementations, RankInboardgame, RankInstrategygames, RankInfamilygames, RankInthematic) values (@0, @1, @2, @3, @4, @5, @6, @7, @8, @9, @10, @11, @12, @13, @14, @15, @16, @17, @18, @19, @20, @21, @22, @23, @24, @25); select scope_identity()";
+        var PK_query = "select TOP 1 * from Boardgame order by BGGid desc";
+        var lastPK = db.QuerySingle(PK_query);
+        var data = db.QueryValue(sql_insert, lastPK.BGGid + 1, name, description, year, image, family, Request.Form["weight"], Request.Form["minplay"], Request.Form["maxplay"], Request.Form["comagerec"], Request.Form["languageease"], Request.Form["bestplayers"], Request.Form["numowned"], Request.Form["numwant"], Request.Form["numwish"], Request.Form["MfgPlaytime"], Request.Form["comminplaytime"], Request.Form["commaxplaytime"], Request.Form["mfgagerec"], Request.Form["numalternates"], Request.Form["numexpansions"], Request.Form["numimplementations"], Request.Form["RankInboardgame"], Request.Form["rankinstrategy"], Request.Form["rankinfamily"], Request.Form["RankInthematic"]);
+        Response.Redirect("/Home/Edit?id=" + (lastPK.BGGid + 1));
+    }
 }
 
 <h2>Create</h2>
@@ -21,6 +33,66 @@
 
         <p>Description</p>
         <textarea name="description" placeholder="description" class="form-control"></textarea>
+
+        <p>Weight</p>
+        <input type="number" name="weight"placeholder="Weight" class="form-control" />
+
+        <p>MinPlayers</p>
+        <input type="number" name="minplay" placeholder="Minimum players" class="form-control" />
+
+        <p>MaxPlayers</p>
+        <input type="number" name="maxplay" placeholder="Maximum players"  class="form-control" />
+
+        <p>Community Age Recommendation</p>
+        <input type="number" name="comagerec" placeholder="Age Recommendation" class="form-control" />
+
+        <p>LanguageEase</p>
+        <input type="number" name="languageease" placeholder="Language Ease"  class="form-control" />
+
+        <p>BestPlayers</p>
+        <input type="number" name="bestplayers" placeholder="BestPlayers" class="form-control" />
+
+        <p>NumOwned</p>
+        <input type="number" name="numowned" placeholder="Number Owned" class="form-control" />
+
+        <p>NumWant</p>
+        <input type="number" name="numwant" placeholder="Number Want" class="form-control" />
+
+        <p>NumWish</p>
+        <input type="number" name="numwish" placeholder="Number Wish" class="form-control" />
+
+        <p>MfgPlaytime</p>
+        <input type="number" name="MfgPlaytime" placeholder="Manufacturer Playtime" class="form-control" />
+
+        <p>ComMinPlaytime</p>
+        <input type="number" name="comminplaytime" placeholder="Community Minimum Playtime" class="form-control" />
+
+        <p>ComMaxPlaytime</p>
+        <input type="number" name="commaxplaytime" placeholder="Community Maximum Playtime" class="form-control" />
+
+        <p>MfgAgeRec</p>
+        <input type="number" name="mfgagerec" placeholder="Manufacturer Age Recommendation" class="form-control" />
+
+        <p>NumAlternates</p>
+        <input type="number" name="numalternates" placeholder="Number of alternates"  class="form-control" />
+
+        <p>NumExpansions</p>
+        <input type="number" name="numexpansions" placeholder="Number of expansions"  class="form-control" />
+
+        <p>NumImplementations</p>
+        <input type="number" name="numimplementations" placeholder="Number of implementations"  class="form-control" />
+
+        <p>RankInboardgame</p>
+        <input type="number" name="RankInboardgame" placeholder="Rank In boardgame"  class="form-control" />
+
+        <p>RankInstrategygames</p>
+        <input type="number" name="rankinstrategy" placeholder="Rank In strategy games" class="form-control" />
+
+        <p>RankInfamilygames</p>
+        <input type="number" name="rankinfamily" placeholder="Rank In family games"  class="form-control" />
+
+        <p>RankInthematic</p>
+        <input type="number" name="RankInthematic" placeholder="Rank In thematic" class="form-control" />
 
         <div>
             <p>Category</p>

@@ -1,7 +1,115 @@
-﻿
+﻿﻿@using WebMatrix.Data
+
 @{
     ViewBag.Title = "Edit";
+
+    var db = Database.Open("BoardGame");
+    var sql_families = $"select GF.FamilyCode, concat(GF.FamilyCode, ' - ', GF.Family) as FamilyName from GameFamily as GF";
+    var fam_data = db.Query(sql_families, "");
+
+    ViewBag.Title = "Detail";
+
+    var id = Request.QueryString["id"];
+
+    var sql = "Select * FROM BoardGame as BG left join (Select BGGid, COUNT(UserRating.rating) as reviewCount, AVG(UserRating.rating) as avgRating from UserRating group by BGGid) as ad on ad.BGGID = BG.BGGid where BG.BGGId = @0";
+
+    var data = db.QuerySingle(sql, id);
 }
 
 <h2>Edit</h2>
+<form class="row" method="post" action="/Home/Create">
+    <p>Item # [auto]</p>
+    <div class="mb-2">
+        <div>
+            <p>Name</p>
+            <input type="text" name="Name" placeholder="Boardgame Name" value="@data.name" class="form-control" />
+        </div>
+
+        <p>Description</p>
+        <textarea name="description" placeholder="description" value="@data.description" class="form-control"></textarea>
+
+        <p>Weight</p>
+        <input type="number" name="weight" value="@data.GameWeight" placeholder="Weight" class="form-control" />
+
+        <p>MinPlayers</p>
+        <input type="number" name="minplay" placeholder="Minimum players" value="@data.MinPlayers" class="form-control" />
+
+        <p>MaxPlayers</p>
+        <input type="number" name="maxplay" placeholder="Maximum players" value="@data.MaxPlayers" class="form-control" />
+
+        <p>Community Age Recommendation</p>
+        <input type="number" name="comagerec" placeholder="Age Recommendation" value="@data.ComAgeRec" class="form-control" />
+
+        <p>LanguageEase</p>
+        <input type="number" name="languageease" placeholder="Language Ease" value="@data.LanguageEase" class="form-control" />
+
+        <p>BestPlayers</p>
+        <input type="number" name="bestplayers" placeholder="BestPlayers" value="@data.BestPlayers" class="form-control" />
+
+        <p>NumOwned</p>
+        <input type="number" name="numowned" placeholder="Number Owned" value="@data.NumOwned" class="form-control" />
+
+        <p>NumWant</p>
+        <input type="number" name="numwant" placeholder="Number Want" value="@data.NumWant" class="form-control" />
+
+        <p>NumWish</p>
+        <input type="number" name="numwish" placeholder="Number Wish" value="@data.NumWish" class="form-control" />
+
+        <p>MfgPlaytime</p>
+        <input type="number" name="MfgPlaytime" placeholder="Manufacturer Playtime" value="@data.MfgPlaytime" class="form-control" />
+
+        <p>ComMinPlaytime</p>
+        <input type="number" name="comminplaytime" placeholder="Community Minimum Playtime" value="@data.ComMinPlaytime" class="form-control" />
+
+        <p>ComMaxPlaytime</p>
+        <input type="number" name="commaxplaytime" placeholder="Community Maximum Playtime" value="@data.ComMaxPLaytime" class="form-control" />
+
+        <p>MfgAgeRec</p>
+        <input type="number" name="mfgagerec" placeholder="Manufacturer Age Recommendation" value="@data.MfgAgeRec" class="form-control" />
+
+        <p>NumAlternates</p>
+        <input type="number" name="numalternates" placeholder="Number of alternates" value="@data.NumAlternates" class="form-control" />
+
+        <p>NumExpansions</p>
+        <input type="number" name="numexpansions" placeholder="Number of expansions" value="@data.NumExpansions" class="form-control" />
+
+        <p>NumImplementations</p>
+        <input type="number" name="numimplementations" placeholder="Number of implementations" value="@data.NumImplementations" class="form-control" />
+
+        <p>RankInboardgame</p>
+        <input type="number" name="RankInboardgame" placeholder="Rank In boardgame" value="@data.RankInboardgame" class="form-control" />
+
+        <p>RankInstrategygames</p>
+        <input type="number" name="rankinstrategy" placeholder="Rank In strategy games" value="@data.RankInstrategygames" class="form-control" />
+
+        <p>RankInfamilygames</p>
+        <input type="number" name="rankinfamily" placeholder="Rank In family games" value="@data.RankInfamilygames" class="form-control" />
+
+        <p>RankInthematic</p>
+        <input type="number" name="RankInthematic" placeholder="Rank In thematic" value="@data.RankInthematic" class="form-control" />
+
+        <div>
+            <p>Family</p>
+            <select name="familyID" class="dropdown">
+                <option value="">Select Category</option>
+                @foreach (var family in fam_data)
+                {
+                    <option value="@family.FamilyCode">@family.FamilyName</option>
+                }
+            </select>
+        </div>
+
+        <p>Year Published</p>
+        <input type="date" name="year" placeholder="Date" value="@data.YearPublished" class="form-control" />
+
+        <p>Image URL</p>
+        <input name="imageurl" placeholder="imageurl" value="@data.ImagePath" class="form-control" />
+
+        <div class="justify-content-right">
+            <button class="btn btn-primary">Save</button>
+            <button class="btn btn-primary">Clear</button>
+        </div>
+
+    </div>
+</form>
 
